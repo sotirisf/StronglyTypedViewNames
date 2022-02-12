@@ -34,7 +34,7 @@ This T4 template was based on the well-known T4MVC project, in an attempt to sim
   public const string Controllers_DotSee_PageMetas__PageMetas = "PageMetas";
 ```
 
-Then, you can go on and use the constants instead of magic strings in your code:
+Then, you can go on and use the constants instead of magic strings in your code, making use of AutoComplete in Visual Studio as well:
 
 In views (example from Umbraco CMS view):
 ```
