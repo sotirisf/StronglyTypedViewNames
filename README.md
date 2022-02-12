@@ -16,4 +16,33 @@ Before running it, there are three variables you should define at the start of t
 This T4 template was based on the well-known T4MVC project, in an attempt to simplify the generation process and overcome some limitations that project's template had. It's really simple, but does its job well.
 
  
+ Here's a sample of what the generated code looks like:
+ 
+  ```  
+  public const string Views_Shared_Molecules__SectionTitle = "~/Views/Shared/Molecules/_SectionTitle.cshtml"; 
+   
+  public const string Views_Shared_Organisms__Contact = "~/Views/Shared/Organisms/_Contact.cshtml"; 
+   
+  public const string Views_Shared_Organisms__ListFilters = "~/Views/Shared/Organisms/_ListFilters.cshtml"; 
+   
+  public const string Views_Shared_Organisms__ListFiltersForSearch = "~/Views/Shared/Organisms/_ListFiltersForSearch.cshtml"; 
+   
+  public const string Views_Shared_Organisms__SearchResultsList = "~/Views/Shared/Organisms/_SearchResultsList.cshtml"; 
+   
+  public const string Controllers_DotSee_PageMetas__Hreflang = "Hreflang"; 
+   
+  public const string Controllers_DotSee_PageMetas__PageMetas = "PageMetas";
+```
+
+Then, you can go on and use the constants instead of magic strings in your code:
+
+In views (example from Umbraco CMS view):
+```
+ @Html.Partial(ViewNameConstants.Views_Shared_Molecules__SectionBlockTitleAlt, Model)
+```
+
+In controllers (example from Umbraco CMS Surface controller):
+```
+return PartialView(MVC.Partials.Views.Widgets.NcWidgetCategoriesList, viewModel);
+```
  
