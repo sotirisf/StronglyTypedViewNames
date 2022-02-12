@@ -1,0 +1,144 @@
+<#@ template language="C#" debug="True" hostspecific="True" #>
+<#@ output extension=".cs" #>
+<#@ assembly name="System.Web" #>
+<#@ assembly name="System.Linq" #>
+<#@ import namespace="System.IO" #>
+<#@ import namespace="System.Web" #>
+<#@ import namespace="System.Linq" #>
+<#@ import namespace="System.Collections.Generic" #>
+<#@ import namespace="System.Text.RegularExpressions" #>
+
+using System; 
+
+namespace DotSee.StronglyTypedViewNames
+{
+    public static class ViewNameConstants
+    {
+    <# 
+
+    //-------------------------------------------------------------------------------------------
+    // CONFIGURATION
+    // ProjectName: The name of the project the TT is in.
+    // RelativeViewsFolder: The path of the project that has the views plus the views folder.
+    //-------------------------------------------------------------------------------------------
+        var ProjectName = "MyStronglyTypedViewNamesProjectName";
+
+        //Start from the same level as the StronglyTypedViewNames project.
+        var RelativeViewsFolder = @"MyWebProject\Views";
+
+        //This applies to all projects
+        var ControllersFolderName = "Controllers";
+    //-------------------------------------------------------------------------------------------
+
+        string currentPath = Host.ResolvePath(string.Empty);
+        string viewsFolderPath = ReplaceLastOccurrence(currentPath, ProjectName, "") + RelativeViewsFolder;
+        string rootPath = ReplaceLastOccurrence(currentPath, ProjectName, "");
+
+        foreach(string file in GetViewFilesInFolder(viewsFolderPath))   
+        {
+           #> 
+            public const string <#= Sanitize(file) #> = "<#= "~/Views/" + file.ToString() + ".cshtml" #>"; 
+           <#
+        }
+
+        foreach(string d in GetSubFolders(viewsFolderPath))   
+        { 
+        
+            foreach (var file in GetViewFilesInFolder(d))
+            {
+                var pathToView = ReplaceLastOccurrence(d, viewsFolderPath, "Views").Replace(@"\", "/") + "/";
+                var name = Sanitize(pathToView);
+
+                #> 
+                public const string <#= name + Sanitize(file) #> = "<#= "~/" + pathToView + file.ToString() + ".cshtml" #>"; 
+                <#
+             }
+        }   
+                
+        foreach (string d in GetSubFolders(rootPath))
+        {
+        
+            if (!d.EndsWith(ControllersFolderName)) {continue;}
+            
+            foreach(string file in GetControllerFilesInFolder(d))   
+            {
+            var pathToControllerTemp = 
+                ReplaceLastOccurrence(d, rootPath, "");
+            var pathToController = 
+                ReplaceLastOccurrence(pathToControllerTemp, ControllersFolderName, "")
+                .Replace(@"\", "/") + "/";
+            var name = "Controllers_" + Sanitize(pathToController);
+                #> 
+                public const string <#= name + Sanitize(file) #> = "<#= file.ToString()  #>"; 
+                <#
+            }
+        }
+    #>    
+    }
+}
+
+<#+
+static IEnumerable<string> GetViewFilesInFolder(string folderName)
+{
+    foreach(string file in Directory.GetFiles(folderName)) 
+    {
+        if (System.IO.Path.GetFileName(file).EndsWith(".cshtml"))
+        {
+            yield return System.IO.Path.GetFileNameWithoutExtension(file);
+        }
+    }
+}
+
+static IEnumerable<string> GetControllerFilesInFolder(string folderName)
+{
+    foreach(string file in Directory.GetFiles(folderName)) 
+    {
+        if (System.IO.Path.GetFileName(file).EndsWith("Controller.cs"))
+        {
+            yield return ReplaceLastOccurrence(System.IO.Path.GetFileNameWithoutExtension(file), "Controller", "");
+        }
+    }
+}
+
+static IEnumerable<string>GetSubFolders(string folderName)
+{
+    foreach (var folder in Directory.GetDirectories(folderName))
+    {
+        yield return folder;
+        foreach (var f in GetSubFolders(folder))
+            {
+                yield return f;
+            }
+    }
+}
+
+static string Sanitize(string token) 
+{
+    if (token == null) return null;
+
+    // Replace all invalid chars by underscores
+    token = Regex.Replace(token, @"[\W\b]", "_", RegexOptions.IgnoreCase);
+
+    // If it starts with a digit, prefix it with an underscore
+    token = Regex.Replace(token, @"^\d", @"_$0");
+
+    // Check for reserved words
+    if (token == "Url") token = "_Url";
+
+    return token;
+}
+
+static string ReplaceLastOccurrence(string Source, string Find, string Replace)
+{
+        int place = Source.LastIndexOf(Find);
+
+        if(place == -1)
+           return Source;
+
+        string result = Source.Remove(place, Find.Length).Insert(place, Replace);
+        return result;
+}
+
+
+#>
+
